@@ -13,12 +13,15 @@ import {
   LayoutDashboard, 
   List, 
   Wifi,
-  WifiOff
+  WifiOff,
+  AlertTriangle,
+  RefreshCw,
+  ServerOff
 } from 'lucide-react';
 
 const MetricsTable: React.FC<{ snapshot: SystemSnapshot }> = ({ snapshot }) => {
   return (
-    <div className="bg-dark-card rounded-xl border border-dark-border overflow-hidden">
+    <div className="bg-dark-card rounded-xl border border-dark-border overflow-hidden z-10 relative">
         <div className="px-4 py-3 border-b border-dark-border bg-white/5">
             <h3 className="text-gray-300 font-semibold text-sm font-mono uppercase">Real-time Telemetry Log</h3>
         </div>
@@ -51,26 +54,27 @@ const MetricsTable: React.FC<{ snapshot: SystemSnapshot }> = ({ snapshot }) => {
 }
 
 const App: React.FC = () => {
-  const { snapshot, history, isSimulation } = useSystemStats();
+  const { snapshot, history, isSimulation, toggleSimulation, connectionError } = useSystemStats();
   const [activeTab, setActiveTab] = useState<TabView>(TabView.DASHBOARD);
   const [currentTime, setCurrentTime] = useState<string>('');
+
+  // Determine if we are truly live or showing fake data
+  const isLive = !isSimulation && !connectionError;
 
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      // Format: HH:MM:SS.mmm
       const timeStr = now.toLocaleTimeString('en-GB', { hour12: false });
       const ms = now.getMilliseconds().toString().padStart(3, '0');
       setCurrentTime(`${timeStr}.${ms}`);
     };
 
     const interval = setInterval(updateTime, 50);
-    updateTime(); // Initial call
+    updateTime(); 
 
     return () => clearInterval(interval);
   }, []);
 
-  // If loading
   if (!snapshot) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-dark-bg text-neon-blue font-mono">
@@ -87,8 +91,8 @@ const App: React.FC = () => {
       
       {/* Sidebar / Navigation */}
       <nav className="w-16 md:w-20 border-r border-dark-border flex flex-col items-center py-6 gap-8 bg-dark-card z-20">
-        <div className="p-2 bg-neon-blue/10 rounded-lg">
-          <Activity className="text-neon-blue" size={28} />
+        <div className={`p-2 rounded-lg transition-colors ${isLive ? 'bg-neon-blue/10' : 'bg-amber-500/10'}`}>
+          <Activity className={isLive ? 'text-neon-blue' : 'text-amber-500'} size={28} />
         </div>
         
         <div className="flex flex-col gap-6 w-full items-center">
@@ -111,25 +115,56 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
-        {/* Header */}
-        <header className="h-16 border-b border-dark-border flex items-center justify-between px-8 bg-black/20 backdrop-blur-sm">
-            <div>
-                <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-3">
-                    SysMon <span className="text-neon-blue font-mono text-sm px-2 py-0.5 rounded border border-neon-blue/30 bg-neon-blue/10">v2.5-RC</span>
-                </h1>
-                <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">
-                    {isSimulation ? 'Simulated Hardware Telemetry' : 'Live Hardware Telemetry'}
-                </p>
-            </div>
-            <div className="flex items-center gap-6">
-                <div className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-full border border-white/5 transition-colors ${
-                    isSimulation 
-                    ? 'text-yellow-500 bg-yellow-500/10' 
-                    : 'text-green-500 bg-green-500/10'
-                }`}>
-                    {isSimulation ? <WifiOff size={14} /> : <Wifi size={14} />}
-                    {isSimulation ? 'Simulation Mode' : 'Real-Time Data'}
+        
+        {/* Background Watermark for Simulation Mode */}
+        {!isLive && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0 opacity-[0.03]">
+                <div className="text-[12rem] font-black text-white -rotate-12 whitespace-nowrap select-none">
+                    SIMULATION
                 </div>
+            </div>
+        )}
+
+        {/* Header */}
+        <header className="h-16 border-b border-dark-border flex items-center justify-between px-8 bg-black/20 backdrop-blur-sm z-10 relative">
+            <div className="flex flex-col">
+                <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-3">
+                    SysMon <span className={`text-xs px-2 py-0.5 rounded border font-mono ${isLive ? 'border-neon-blue/30 bg-neon-blue/10 text-neon-blue' : 'border-amber-500/30 bg-amber-500/10 text-amber-500'}`}>v2.5-RC</span>
+                </h1>
+                
+                <div className="flex items-center gap-2 mt-0.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-neon-green shadow-[0_0_8px_#0aff00]' : 'bg-amber-500 animate-pulse'}`} />
+                    <p className={`text-[10px] uppercase tracking-widest font-mono ${isLive ? 'text-gray-500' : 'text-amber-500'}`}>
+                        {isLive ? 'LIVE UPLINK ESTABLISHED' : (connectionError ? 'OFFLINE • SIMULATED DATA' : 'SIMULATION MODE ACTIVE')}
+                    </p>
+                </div>
+            </div>
+            
+            <div className="flex items-center gap-6">
+                {/* Connection Error Banner */}
+                {connectionError && !isSimulation && (
+                  <div className="hidden lg:flex items-center gap-2 bg-amber-900/20 border border-amber-500/30 px-3 py-1.5 rounded text-xs text-amber-200 animate-pulse">
+                    <ServerOff size={14} />
+                    <span>Server Unreachable. Showing generated mock data. Run: </span>
+                    <code className="bg-black/30 px-1 rounded font-mono border border-amber-500/20">npm run server</code>
+                  </div>
+                )}
+
+                {/* Mode Toggle */}
+                <button 
+                  onClick={toggleSimulation}
+                  className={`flex items-center gap-2 text-xs px-4 py-2 rounded-full border transition-all hover:brightness-110 active:scale-95 ${
+                    isSimulation 
+                    ? 'text-amber-400 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20' 
+                    : 'text-neon-green bg-green-500/10 border-green-500/30 hover:bg-green-500/20'
+                  }`}
+                  title={isSimulation ? "Switch to Real-Time Mode" : "Switch to Simulation Mode"}
+                >
+                    {isSimulation ? <WifiOff size={14} /> : <Wifi size={14} />}
+                    {isSimulation ? 'Simulation' : 'Real-Time'}
+                    {connectionError && !isSimulation && <RefreshCw size={12} className="animate-spin ml-1"/>}
+                </button>
+
                 <div className="text-right hidden sm:block">
                     <div className="text-xs text-gray-400">Local Time</div>
                     <div className="text-sm font-mono text-white min-w-[100px]">{currentTime}</div>
@@ -138,7 +173,7 @@ const App: React.FC = () => {
         </header>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 relative">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 relative z-10">
             
             {activeTab === TabView.DASHBOARD && (
                 <div className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -149,13 +184,13 @@ const App: React.FC = () => {
                             value={`${snapshot.cpu.usage.toFixed(1)}%`}
                             subValue={`${snapshot.cpu.frequency.toFixed(2)} GHz`}
                             icon={Cpu}
-                            color="text-neon-blue"
-                            borderColor="#00f3ff"
+                            color={isLive ? "text-neon-blue" : "text-gray-400"}
+                            borderColor={isLive ? "#00f3ff" : "#555"}
                             details={
                                 <div className="h-12 w-full mt-2">
                                      <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
                                         <div 
-                                            className="h-full bg-neon-blue transition-all duration-300 ease-out"
+                                            className={`h-full transition-all duration-300 ease-out ${isLive ? 'bg-neon-blue' : 'bg-gray-500'}`}
                                             style={{ width: `${snapshot.cpu.usage}%` }}
                                         />
                                      </div>
@@ -171,8 +206,8 @@ const App: React.FC = () => {
                             value={`${snapshot.gpu.usage.toFixed(1)}%`}
                             subValue={`${(snapshot.gpu.memoryUsed / 1024).toFixed(1)} GB VRAM`}
                             icon={Zap}
-                            color="text-neon-green"
-                            borderColor="#0aff00"
+                            color={isLive ? "text-neon-green" : "text-gray-400"}
+                            borderColor={isLive ? "#0aff00" : "#555"}
                             details={
                                 <div className="flex flex-col text-xs text-gray-400 mt-2 font-mono">
                                     <div className="flex justify-between w-full">
@@ -187,12 +222,12 @@ const App: React.FC = () => {
                             value={`${snapshot.memory.used.toFixed(1)} GB`}
                             subValue={`of ${snapshot.memory.total.toFixed(0)} GB`}
                             icon={Database}
-                            color="text-neon-purple"
-                            borderColor="#bc13fe"
+                            color={isLive ? "text-neon-purple" : "text-gray-400"}
+                            borderColor={isLive ? "#bc13fe" : "#555"}
                             details={
                                  <div className="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden mt-4">
                                     <div 
-                                        className="h-full bg-neon-purple transition-all duration-300 ease-out"
+                                        className={`h-full transition-all duration-300 ease-out ${isLive ? 'bg-neon-purple' : 'bg-gray-500'}`}
                                         style={{ width: `${(snapshot.memory.used / snapshot.memory.total) * 100}%` }}
                                     />
                                  </div>
@@ -203,8 +238,8 @@ const App: React.FC = () => {
                             value={`${snapshot.cpu.temperature.toFixed(0)}°C`}
                             subValue={`CPU`}
                             icon={Thermometer}
-                            color={snapshot.cpu.temperature > 80 ? "text-neon-red" : "text-neon-yellow"}
-                            borderColor={snapshot.cpu.temperature > 80 ? "#ff003c" : "#fcee0a"}
+                            color={snapshot.cpu.temperature > 80 ? "text-neon-red" : (isLive ? "text-neon-yellow" : "text-gray-400")}
+                            borderColor={snapshot.cpu.temperature > 80 ? "#ff003c" : (isLive ? "#fcee0a" : "#555")}
                             details={
                                 <div className="grid grid-cols-2 gap-2 mt-2">
                                     <div className="bg-white/5 rounded p-1.5 text-center">
@@ -228,7 +263,7 @@ const App: React.FC = () => {
                              <LiveAreaChart 
                                 data={history} 
                                 dataKey="cpuUsage" 
-                                color="#00f3ff" 
+                                color={isLive ? "#00f3ff" : "#888888"} 
                                 title="CPU Usage History" 
                             />
                         </div>
@@ -243,7 +278,7 @@ const App: React.FC = () => {
                              <LiveAreaChart 
                                 data={history} 
                                 dataKey="gpuUsage" 
-                                color="#0aff00" 
+                                color={isLive ? "#0aff00" : "#888888"} 
                                 title="GPU Load History" 
                             />
                         </div>
@@ -252,7 +287,7 @@ const App: React.FC = () => {
                             <LiveAreaChart 
                                 data={history} 
                                 dataKey="gpuMemoryUsage" 
-                                color="#0aff00" 
+                                color={isLive ? "#0aff00" : "#888888"} 
                                 title="GPU Memory (GB)"
                                 unit=" GB" 
                             />
