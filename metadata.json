@@ -1,0 +1,5 @@
+{
+  "name": "SysMon AI Dashboard",
+  "description": "A futuristic system monitoring dashboard interface that visualizes CPU, GPU, and Memory statistics with a built-in Gemini AI system advisor. Note: Displays simulated data for demonstration as browsers cannot access low-level hardware directly.",
+  "requestFramePermissions": []
+}

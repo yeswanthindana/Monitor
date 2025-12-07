@@ -1,11 +1,37 @@
-<div align="center">
+# SysMon AI Dashboard
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+This dashboard supports both **Simulated Mode** (default) and **Real Data Mode**.
 
-  <h1>Built with AI Studio</h2>
+## How to use Real Data
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+You can run the backend using either **Node.js** or **Python**.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+### Option A: Node.js Backend
+1.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+2.  **Start Server** (Admin/Sudo recommended for temps):
+    ```bash
+    npm run server
+    ```
 
-</div>
+### Option B: Python Backend (Alternative)
+If you prefer Python or want better NVIDIA GPU support via `gputil`.
+
+1.  **Install Python Dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+2.  **Start Server**:
+    ```bash
+    python server.py
+    ```
+
+### Start Frontend
+In a new terminal window:
+```bash
+npm start
+```
+
+The dashboard will automatically detect the server at `http://localhost:3001`.
