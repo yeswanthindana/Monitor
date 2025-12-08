@@ -6,8 +6,60 @@
     <title>SysMon AI - System Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        /* Dark Mode (Default) */
+        --bg-app: #050505;
+        --bg-card: #111111;
+        --bg-surface: rgba(255, 255, 255, 0.05);
+        --border: #333333;
+        --text-main: #e5e5e5;
+        --text-muted: #9ca3af;
+        --grid-line: rgba(255, 255, 255, 0.03);
+      }
+
+      .light-mode {
+        /* Light Mode Overrides */
+        --bg-app: #f3f4f6;
+        --bg-card: #ffffff;
+        --bg-surface: rgba(0, 0, 0, 0.05);
+        --border: #e5e7eb;
+        --text-main: #111827;
+        --text-muted: #4b5563;
+        --grid-line: rgba(0, 0, 0, 0.05);
+      }
+
+      body {
+        background-color: var(--bg-app);
+        color: var(--text-main);
+        transition: background-color 0.3s, color 0.3s;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--bg-card);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      
+      .grid-bg {
+        background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+        background-size: 30px 30px;
+      }
+    </style>
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
@@ -23,41 +75,20 @@
                 yellow: '#fcee0a',
               },
               dark: {
-                bg: '#050505',
-                card: '#111111',
-                border: '#333333',
+                bg: 'var(--bg-app)',
+                card: 'var(--bg-card)',
+                border: 'var(--border)',
+                surface: 'var(--bg-surface)',
+              },
+              text: {
+                main: 'var(--text-main)',
+                muted: 'var(--text-muted)',
               }
             }
           },
         },
       }
     </script>
-    <style>
-      body {
-        background-color: #050505;
-        color: #e5e5e5;
-      }
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #111;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #333;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #444;
-      }
-      .grid-bg {
-        background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        background-size: 30px 30px;
-      }
-    </style>
   <script type="importmap">
 {
   "imports": {

@@ -10,6 +10,7 @@ app.use(cors());
 // Cache static system information to improve performance
 // We fetch constant hardware details once at startup.
 let staticSystemData = {
+  hostname: 'Loading...',
   os: 'Loading...',
   cpuModel: 'Loading...',
   gpuName: 'Loading...',
@@ -31,19 +32,34 @@ const initSystemData = async () => {
     const gpuController = graphics.controllers.find(c => c.bus !== 'Onboard') || graphics.controllers[0] || {};
 
     staticSystemData = {
+      hostname: osInfo.hostname,
       os: `${osInfo.distro} ${osInfo.release} (${osInfo.arch})`,
       cpuModel: `${cpu.manufacturer} ${cpu.brand}`,
       gpuName: gpuController.model || 'Generic GPU',
       memTotal: mem.total,
       vramTotal: gpuController.vram || 0
     };
-    console.log('Static system data loaded:', staticSystemData.os);
+    console.log('Static system data loaded:', staticSystemData.hostname);
   } catch (e) {
     console.error('Error loading static system data:', e);
   }
 };
 
 initSystemData();
+
+// Root route for status check
+app.get('/', (req, res) => {
+  res.send(`
+    <html>
+      <body style="font-family: monospace; background: #111; color: #0aff00; padding: 2rem;">
+        <h1>🚀 SysMon Backend is Active</h1>
+        <p>Status: ONLINE</p>
+        <p>Port: ${PORT}</p>
+        <p>Endpoint: <a href="/stats" style="color: #00f3ff">/stats</a></p>
+      </body>
+    </html>
+  `);
+});
 
 app.get('/stats', async (req, res) => {
   try {
@@ -85,6 +101,7 @@ app.get('/stats', async (req, res) => {
 
     const snapshot = {
       timestamp: Date.now(),
+      hostname: staticSystemData.hostname,
       os: staticSystemData.os,
       cpuModel: staticSystemData.cpuModel,
       cpu: {

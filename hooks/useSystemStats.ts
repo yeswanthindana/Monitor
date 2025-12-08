@@ -104,6 +104,7 @@ export const useSystemStats = () => {
 
       const mockSnapshot: SystemSnapshot = {
           timestamp: Date.now(),
+          hostname: "SIM-NODE-01",
           os: "Windows 11 Pro (Simulated)",
           cpuModel: "AMD Ryzen 9 7950X (Simulated)",
           cpu: {

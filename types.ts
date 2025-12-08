@@ -32,6 +32,7 @@ export interface MemoryStats {
 
 export interface SystemSnapshot {
   timestamp: number;
+  hostname: string;
   cpu: CpuStats;
   gpu: GpuStats;
   memory: MemoryStats;
